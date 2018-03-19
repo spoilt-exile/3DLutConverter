@@ -1,6 +1,6 @@
 ## 3DLutConverter
 
-##### Version 1.0
+##### Version 1.1
 
 This repository contains source code of the utility which converts HaldCLUT images 
 into 3D Lut files (*.3dl). It supports only 16x16x16 cube for conversion. 

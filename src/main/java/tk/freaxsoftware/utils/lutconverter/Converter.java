@@ -20,6 +20,7 @@
 package tk.freaxsoftware.utils.lutconverter;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,8 +37,8 @@ import javax.imageio.ImageIO;
  */
 public class Converter {
     
-    private static final String LUT_HEADER_FORMAT = "# Converted by LutConverter\n"
-            + "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255\n";
+    private static final String LUT_HEADER_FORMAT = "# Converted by LutConverter";
+    private static final String LINE_SEPARATOR = "\n";
     
     private static final int HALD_SIZE_LIMIT = 64;
     
@@ -52,17 +53,22 @@ public class Converter {
         BufferedImage haldImage = ImageIO.read(input);
         OutputStreamWriter outputStream = new OutputStreamWriter(output);
         if (haldImage.getHeight() != HALD_SIZE_LIMIT || haldImage.getWidth() != HALD_SIZE_LIMIT) {
-            throw new ConvertException(ConvertException.Code.HALD_LUT_UNSUPPORTED_FORMAT, "Unable to convert HALD CLUT file, your file must be 4096x4096 pixels.");
+            throw new ConvertException(ConvertException.Code.HALD_LUT_UNSUPPORTED_FORMAT, "Unable to convert HALD CLUT file, your file must be 64x64 pixels.");
         }
         outputStream.write(LUT_HEADER_FORMAT);
+        outputStream.write(LINE_SEPARATOR);
+        outputStream.write(Util.get3dlHeader(16, 10));
+        outputStream.write(LINE_SEPARATOR);
         int[] pixelData = new int[3];
+        
+        Raster imageData = haldImage.getData();
         
         for (int hIndex = 0; hIndex < haldImage.getHeight(); hIndex++) {
             for (int wIndex = 0; wIndex < haldImage.getWidth(); wIndex++) {
-                pixelData = haldImage.getData().getPixel(wIndex, hIndex, pixelData);
-                System.out.println("Processing: " + wIndex + "x" + hIndex);
-                outputStream.write(String.format("%d %d %d\n", pixelData[0], pixelData[1], pixelData[2]));
+                pixelData = imageData.getPixel(wIndex, hIndex, pixelData);
+                outputStream.write(String.format("%d %d %d\n", pixelData[0]<<2, pixelData[1]<<2, pixelData[2]<<2));
             }
+            System.out.printf("Done: %d\n", hIndex);
         }
         
         outputStream.flush();
